@@ -12,43 +12,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get tokens
     const receivedToken = req.headers['x-auth-token'];
     const expectedToken = process.env.API_AUTH_TOKEN;
     
-    // DEBUG LOGGING
-    console.log('=== AUTH DEBUG ===');
-    console.log('Received token:', receivedToken);
-    console.log('Expected token:', expectedToken);
-    console.log('Match:', receivedToken === expectedToken);
-    console.log('================');
-    
-    if (!receivedToken) {
-      console.error('❌ No token received in headers');
-      return res.status(401).json({ error: 'No auth token provided' });
+    if (!receivedToken || !expectedToken || receivedToken !== expectedToken) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
-    
-    if (!expectedToken) {
-      console.error('❌ No token configured in environment');
-      return res.status(500).json({ error: 'Server not configured' });
-    }
-    
-    if (receivedToken !== expectedToken) {
-      console.error('❌ Token mismatch');
-      return res.status(401).json({ 
-        error: 'Invalid token',
-        debug: {
-          receivedLength: receivedToken.length,
-          expectedLength: expectedToken.length
-        }
-      });
-    }
-
-    console.log('✅ Auth successful');
 
     const apiKey = process.env.GOOGLE_PLACES_API_KEY;
     if (!apiKey) {
-      console.error('❌ Missing API key');
       return res.status(500).json({ error: 'Server configuration error' });
     }
 
@@ -64,6 +36,15 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Google API error:', errorData);
       return res.status(response.status).json({ 
-        error: errorData.error?.message |
+        error: errorData.error?.message || 'API error' 
+      });
+    }
+
+    const data = await response.json();
+    return res.status(200).json(data);
+
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
