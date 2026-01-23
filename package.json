@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "name": "food-explorer-proxy",
+  "version": "1.0.0",
+  "description": "Proxy for Food Explorer extension",
+  "main": "api/places.js"
+}
